@@ -3,7 +3,7 @@
 <package format="3">
   <name>my_robot_nodes</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
+  <description>Nodes for the Lab 1 exercise: turn away, rotate action server and square driver</description>
   <maintainer email="abeltezare12@gmail.com">abel</maintainer>
   <license>MIT</license>
 
@@ -13,11 +13,6 @@
   <depend>std_srvs</depend>
   <depend>lab_interfaces</depend>
   <depend>my_robot_interfaces</depend>
-
-  <test_depend>ament_copyright</test_depend>
-  <test_depend>ament_flake8</test_depend>
-  <test_depend>ament_pep257</test_depend>
-  <test_depend>python3-pytest</test_depend>
 
   <export>
     <build_type>ament_python</build_type>

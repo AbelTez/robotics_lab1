@@ -20,6 +20,10 @@
   <xacro:property name="camera_mass" value="0.1" />
 
   <!-- TODO (exercise Step 1): properties for the depth camera's size and mass -->
+  <xacro:property name="depth_camera_x" value="0.03" />
+  <xacro:property name="depth_camera_y" value="0.08" />
+  <xacro:property name="depth_camera_z" value="0.03" />
+  <xacro:property name="depth_camera_mass" value="0.1" />
 
   <xacro:macro name="box_inertia" params="m x y z">
     <inertia ixx="${m*(y*y+z*z)/12}" ixy="0" ixz="0" iyy="${m*(x*x+z*z)/12}" iyz="0" izz="${m*(x*x+y*y)/12}" />
@@ -179,12 +183,55 @@
     <origin xyz="${chassis_length/2 + 0.015} 0 0" />
   </joint>
 
-  <!-- TODO (exercise Step 1): depth camera on the back face, looking along -x.
-       Add the link depth_camera_link (visual, collision, inertial) and a fixed joint
-       to base_link, turned half a turn about z. -->
+  <!-- Depth camera on the back face, looking along -x -->
+  <link name="depth_camera_link">
+    <visual>
+      <geometry>
+        <box size="${depth_camera_x} ${depth_camera_y} ${depth_camera_z}" />
+      </geometry>
+      <material name="blue" />
+    </visual>
+    <collision>
+      <geometry>
+        <box size="${depth_camera_x} ${depth_camera_y} ${depth_camera_z}" />
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="${depth_camera_mass}" />
+      <xacro:box_inertia m="${depth_camera_mass}" x="${depth_camera_x}" y="${depth_camera_y}" z="${depth_camera_z}" />
+    </inertial>
+  </link>
 
-  <!-- TODO (exercise Step 1): IMU at the centre of the chassis.
-       Add the link imu_link and a fixed joint to base_link. -->
+  <joint name="depth_camera_joint" type="fixed">
+    <parent link="base_link" />
+    <child link="depth_camera_link" />
+    <origin xyz="${-chassis_length/2 - 0.015} 0 0" rpy="0 0 ${pi}" />
+  </joint>
+
+  <!-- IMU at the centre of the chassis -->
+  <link name="imu_link">
+    <visual>
+      <geometry>
+        <box size="0.02 0.02 0.02" />
+      </geometry>
+      <material name="blue" />
+    </visual>
+    <collision>
+      <geometry>
+        <box size="0.02 0.02 0.02" />
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.01" />
+      <xacro:box_inertia m="0.01" x="0.02" y="0.02" z="0.02" />
+    </inertial>
+  </link>
+
+  <joint name="imu_joint" type="fixed">
+    <parent link="base_link" />
+    <child link="imu_link" />
+    <origin xyz="0 0 0" />
+  </joint>
 
   <!-- Frictionless caster so it slides instead of dragging -->
   <gazebo reference="caster">
@@ -249,11 +296,48 @@
     </sensor>
   </gazebo>
 
-  <!-- TODO (exercise Step 1): Gazebo sensor of type depth_camera for depth_camera_link,
-       publishing on /depth_camera, with its camera_info_topic set to
-       /depth_camera/camera_info -->
+  <gazebo reference="depth_camera_link">
+    <sensor name="depth_camera" type="depth_camera">
+      <topic>/depth_camera</topic>
+      <gz_frame_id>depth_camera_link</gz_frame_id>
+      <update_rate>10</update_rate>
+      <always_on>true</always_on>
+      <camera>
+        <camera_info_topic>/depth_camera/camera_info</camera_info_topic>
+        <horizontal_fov>1.047</horizontal_fov>
+        <image>
+          <width>320</width>
+          <height>240</height>
+          <format>R_FLOAT32</format>
+        </image>
+        <clip>
+          <near>0.1</near>
+          <far>10</far>
+        </clip>
+      </camera>
+    </sensor>
+  </gazebo>
 
-  <!-- TODO (exercise Step 1): Gazebo sensor of type imu for imu_link, publishing on /imu -->
+  <gazebo reference="imu_link">
+    <sensor name="imu" type="imu">
+      <topic>/imu</topic>
+      <gz_frame_id>imu_link</gz_frame_id>
+      <update_rate>50</update_rate>
+      <always_on>true</always_on>
+      <imu>
+        <angular_velocity>
+          <x><noise type="gaussian"><mean>0</mean><stddev>0.0002</stddev></noise></x>
+          <y><noise type="gaussian"><mean>0</mean><stddev>0.0002</stddev></noise></y>
+          <z><noise type="gaussian"><mean>0</mean><stddev>0.0002</stddev></noise></z>
+        </angular_velocity>
+        <linear_acceleration>
+          <x><noise type="gaussian"><mean>0</mean><stddev>0.002</stddev></noise></x>
+          <y><noise type="gaussian"><mean>0</mean><stddev>0.002</stddev></noise></y>
+          <z><noise type="gaussian"><mean>0</mean><stddev>0.002</stddev></noise></z>
+        </linear_acceleration>
+      </imu>
+    </sensor>
+  </gazebo>
 
   <!-- Gazebo plugins -->
   <gazebo>
